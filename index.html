@@ -21,6 +21,7 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Pretendard', sans-serif; background: var(--bg-color); color: var(--text-main); overflow: hidden; }
 
+        /* 메인 레이아웃 */
         .main-wrapper { display: flex; width: 200%; height: 100vh; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
         .page { width: 50%; height: 100%; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
@@ -28,6 +29,7 @@
         header h2 { margin: 0; font-size: 1.2rem; font-weight: 800; cursor: pointer; text-decoration: underline; text-decoration-color: var(--grass-1); }
         .nav-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--point-blue); padding: 10px; }
 
+        /* 캘린더 */
         .calendar-section { background: white; padding-bottom: 20px; border-bottom: 1px solid #f1f5f9; flex-shrink: 0; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); padding: 0 15px; }
         .day-label { padding: 10px 0; font-size: 0.7rem; text-align: center; font-weight: 700; color: #94a3b8; }
@@ -41,14 +43,26 @@
         .day.today { font-weight: 900; box-shadow: inset 0 0 0 2px var(--grass-1); }
         .count-dot { font-size: 0.5rem; margin-top: 2px; opacity: 0.8; }
 
+        /* 하단 투두 영역 */
         .inline-todo-section { flex: 1; overflow-y: auto; padding: 20px; background: var(--bg-color); }
         .inline-todo-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .inline-todo-header h3 { margin: 0; font-size: 1.1rem; font-weight: 700; }
         .inline-todo-header span { font-size: 0.8rem; color: var(--point-blue); font-weight: 600; }
 
-        .cat-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; }
-        .cat-chip { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; background: #e2e8f0; white-space: nowrap; cursor: pointer; border: 2px solid transparent; }
-        .cat-chip.active { border-color: var(--point-blue); background: var(--point-blue); color: white; font-weight: 700; }
+        /* --- 카테고리 바 스타일 수정 --- */
+        .cat-bar { display: flex; gap: 8px; overflow-x: auto; padding: 5px 0 15px; margin-bottom: 10px; }
+        .cat-chip { 
+            padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; 
+            white-space: nowrap; cursor: pointer; border: none; 
+            transition: all 0.2s ease; font-weight: 600;
+            opacity: 0.6; /* 기본 투명도 */
+        }
+        .cat-chip.active { 
+            opacity: 1; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+            color: white !important; /* 선택 시 글자색 흰색 고정 */
+        }
 
         .input-group { display: flex; gap: 8px; margin-bottom: 20px; }
         #todoInput { flex: 1; padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; outline: none; background: white; }
@@ -58,17 +72,14 @@
         .todo-item.done { opacity: 0.5; text-decoration: line-through; }
         .cat-title { font-size: 0.75rem; font-weight: 800; color: #94a3b8; margin: 15px 0 8px; display: flex; align-items: center; gap: 6px; }
 
-        /* 메모 리스트 스타일 수정 */
+        /* 메모 페이지 */
         .memo-page { background-color: var(--ios-bg); display: flex; flex-direction: column; }
         .memo-header { padding: 50px 25px 10px; display: flex; justify-content: space-between; align-items: flex-end; }
         .memo-header h1 { font-size: 2rem; margin: 0; font-weight: 800; }
         .new-memo-btn { color: var(--point-blue); font-weight: 700; font-size: 1rem; cursor: pointer; border: none; background: none; }
         
         .memo-list-container { margin: 20px; background: white; border-radius: 12px; overflow: hidden; flex: 1; overflow-y: auto; }
-        .memo-item { 
-            padding: 12px 16px; border-bottom: 0.5px solid #E5E5E7; cursor: pointer; 
-            display: flex; justify-content: space-between; align-items: center; gap: 10px;
-        }
+        .memo-item { padding: 12px 16px; border-bottom: 0.5px solid #E5E5E7; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
         .memo-item:active { background-color: #E5E5E7; }
         .memo-info { display: flex; flex-direction: column; gap: 4px; flex: 1; overflow: hidden; }
         .memo-item .memo-title { font-size: 0.95rem; font-weight: 700; color: black; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -115,6 +126,7 @@
                 <span id="todoDateText">날짜를 선택하세요</span>
             </div>
             <div class="cat-bar" id="catBar"></div>
+            
             <div class="input-group">
                 <input type="text" id="todoInput" placeholder="업적 추가..." onkeypress="if(event.keyCode==13) addTodo()">
                 <button id="addBtn" onclick="addTodo()">+</button>
@@ -142,8 +154,12 @@
 
 <script>
     const CATEGORIES = [
-        {name:'공부', color:'#3D9776'},  {name:'대외활동', color:'#FDFFB6'},{name:'과제', color:'#cc4125'},
-        {name:'일', color:'#a4c2f4'}, {name:'놀기', color:'#FFD1DC'}, {name:'기타', color:'#D1D1D1'}
+        {name:'공부', color:'#3D9776'},  
+        {name:'대외활동', color:'#ffd966'}, // 노랑색 가독성 위해 약간 진하게 조정
+        {name:'과제', color:'#CC4125'},
+        {name:'일', color:'#7AB2F6'}, 
+        {name:'놀기', color:'#FF9EB3'}, // 핑크색 가독성 조정
+        {name:'기타', color:'#94A3B8'}
     ];
 
     let currentMonth = new Date();
@@ -174,7 +190,6 @@
         if(currentPage === 1) renderMemoList();
     }
 
-    // --- 캘린더/투두 로직 (생략 - 이전과 동일) ---
     function renderCalendar() {
         const year = currentMonth.getFullYear(), month = currentMonth.getMonth();
         document.getElementById('currentMonthYear').innerText = `${year}년 ${month + 1}월`;
@@ -202,12 +217,24 @@
         renderCalendar(); renderCatBar(); renderTodos();
     }
 
+    // --- 카테고리 바 렌더링 수정 ---
     function renderCatBar() {
         const bar = document.getElementById('catBar'); bar.innerHTML = '';
         CATEGORIES.forEach((c, i) => {
             const chip = document.createElement('div');
-            chip.className = `cat-chip ${selectedCatIdx === i ? 'active' : ''}`;
+            const isActive = selectedCatIdx === i;
+            chip.className = `cat-chip ${isActive ? 'active' : ''}`;
             chip.innerText = c.name;
+            
+            // 인라인 스타일로 카테고리 색상 적용
+            if (isActive) {
+                chip.style.backgroundColor = c.color;
+                chip.style.color = 'white';
+            } else {
+                chip.style.backgroundColor = c.color + '22'; // 22는 투명도 약 13% (연한 배경)
+                chip.style.color = c.color;
+            }
+            
             chip.onclick = () => { selectedCatIdx = i; renderCatBar(); };
             bar.appendChild(chip);
         });
@@ -239,7 +266,6 @@
         document.getElementById('todoInput').value = ''; save();
     }
 
-    // --- 메모 관리 로직 ---
     function renderMemoList() {
         const list = document.getElementById('memoList');
         list.innerHTML = '';
@@ -251,7 +277,6 @@
             const title = memo.content.split('\n')[0] || "새로운 메모";
             const item = document.createElement('div');
             item.className = 'memo-item';
-            // 아이템 클릭 시 에디터 열기 (단, 삭제 버튼 클릭 시 제외되도록 stopPropagation 처리)
             item.innerHTML = `
                 <div class="memo-info" onclick="openEditor(${JSON.stringify(memo).replace(/"/g, '&quot;')})">
                     <div class="memo-title">${title}</div>
