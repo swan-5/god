@@ -6,11 +6,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>갓생 가든 Pro ☁️</title>
+    <title>SW☁️</title>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
     <style>
         :root {
             --bg-color: #F8FAFC;
+            --ios-bg: #F2F2F7;
             --text-main: #1E293B;
             --point-blue: #7ab2f6;
             --grass-0: #FFFFFF;
@@ -22,11 +23,12 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Pretendard', sans-serif; background: var(--bg-color); color: var(--text-main); overflow: hidden; }
 
-        /* 메인 캘린더 페이지 */
-        .page { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        /* 스와이프 레이아웃 */
+        .main-wrapper { display: flex; width: 200%; height: 100vh; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
+        .page { width: 50%; height: 100%; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
         header { padding: 40px 20px 10px; display: flex; justify-content: space-between; align-items: center; background: white; flex-shrink: 0; }
-        header h2 { margin: 0; font-size: 1.1rem; font-weight: 800; }
+        header h2 { margin: 0; font-size: 1.1rem; font-weight: 800; cursor: pointer; text-decoration: underline; text-decoration-color: var(--grass-1); }
         .nav-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--point-blue); padding: 5px; }
 
         /* 캘린더 스타일 */
@@ -50,99 +52,115 @@
         }
         .day-todo-item.done { opacity: 0.4; text-decoration: line-through; }
 
-        /* --- 전체 화면 업적 섹션 --- */
-        .full-todo-page {
-            position: fixed; top: 100%; left: 0; width: 100%; height: 100%;
-            background: var(--bg-color); z-index: 1000;
-            transition: top 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            display: flex; flex-direction: column;
-        }
+        /* 메모 페이지 스타일 */
+        .memo-page { background-color: var(--ios-bg); display: flex; flex-direction: column; }
+        .memo-header { padding: 50px 25px 10px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .memo-header h1 { font-size: 2rem; margin: 0; font-weight: 800; }
+        .memo-list-container { margin: 20px; background: white; border-radius: 12px; overflow: hidden; flex: 1; overflow-y: auto; }
+        .memo-item { padding: 12px 16px; border-bottom: 0.5px solid #E5E5E7; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .memo-item:active { background: #f2f2f2; }
+        .memo-title { font-weight: 700; font-size: 0.95rem; }
+        .memo-delete-btn { color: #ff3b30; font-size: 1.2rem; padding: 5px; opacity: 0.3; }
+
+        /* 전체 화면 할 일 페이지 */
+        .full-todo-page { position: fixed; top: 100%; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 1000; transition: top 0.4s cubic-bezier(0.25, 1, 0.5, 1); display: flex; flex-direction: column; }
         .full-todo-page.active { top: 0; }
-
-        .todo-header {
-            background: white; padding: 50px 20px 20px; flex-shrink: 0;
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid #f1f5f9;
-        }
-        .todo-header h3 { margin: 0; font-size: 1.3rem; }
-        .close-btn { font-size: 1.5rem; border: none; background: none; color: #94a3b8; cursor: pointer; }
-
-        .todo-content { flex: 1; overflow-y: auto; padding: 20px; }
-        
+        .todo-header { background: white; padding: 50px 20px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; }
         .cat-bar { display: flex; gap: 8px; overflow-x: auto; padding: 5px 0 20px; }
         .cat-chip { padding: 10px 20px; border-radius: 25px; font-size: 0.9rem; white-space: nowrap; cursor: pointer; transition: 0.2s; font-weight: 600; opacity: 0.6; }
-        .cat-chip.active { opacity: 1; color: white !important; transform: scale(1.05); }
+        .cat-chip.active { opacity: 1; color: white !important; }
+        .todo-item { display: flex; align-items: center; gap: 12px; padding: 18px; background: white; border-radius: 18px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
 
-        .input-group { display: flex; gap: 8px; margin-bottom: 25px; }
-        #todoInput { flex: 1; padding: 15px; border: 1px solid #e2e8f0; border-radius: 15px; outline: none; background: white; font-size: 1rem; }
-        #addBtn { background: var(--point-blue); color: white; border: none; width: 55px; border-radius: 15px; font-size: 1.5rem; cursor: pointer; }
+        /* 모달 스타일 (목표 설정용) */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 20px; backdrop-filter: blur(4px); }
+        .modal-content { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 25px; }
+        #monthGoalText { width: 100%; height: 150px; border: 1px solid #f1f5f9; border-radius: 15px; padding: 15px; margin: 15px 0; outline: none; resize: none; font-family: inherit; font-size: 1rem; }
 
-        .todo-item { 
-            display: flex; align-items: center; gap: 12px; padding: 18px; background: white; 
-            border-radius: 18px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); 
-            cursor: pointer; font-size: 1rem;
-        }
-        .todo-item.done { opacity: 0.5; text-decoration: line-through; }
-        .cat-title { font-size: 0.85rem; font-weight: 800; color: #94A3B8; margin: 20px 0 10px; display: flex; align-items: center; gap: 8px; }
+        /* 메모 에디터 */
+        .memo-editor { position: fixed; inset: 0; background: white; z-index: 4000; display: none; flex-direction: column; }
+        #editorBody { flex: 1; padding: 20px; font-size: 1.1rem; border: none; outline: none; resize: none; }
 
-        /* 액션 시트 */
+        .page-dots { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 50; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: #ccc; transition: 0.3s; }
+        .dot.active { background: var(--point-blue); transform: scale(1.3); }
+
         .action-sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; z-index: 2000; backdrop-filter: blur(2px); }
-        .action-sheet {
-            position: fixed; bottom: -100%; left: 0; right: 0; background: #F2F2F7;
-            border-radius: 25px 25px 0 0; padding: 20px; transition: bottom 0.3s ease; z-index: 2001;
-        }
+        .action-sheet { position: fixed; bottom: -100%; left: 0; right: 0; background: #F2F2F7; border-radius: 25px 25px 0 0; padding: 20px; transition: bottom 0.3s ease; z-index: 2001; }
         .action-sheet.active { bottom: 0; }
-        .sheet-header { display: flex; gap: 10px; margin-bottom: 15px; }
-        .header-btn { flex: 1; background: white; border-radius: 15px; padding: 15px; border: none; font-weight: 600; font-size: 0.9rem; }
-        .action-list { background: white; border-radius: 15px; overflow: hidden; }
-        .action-item { padding: 15px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 0.5px solid #F0F0F0; font-weight: 500; }
     </style>
 </head>
 <body>
 
-<div class="page">
-    <header>
-        <button class="nav-btn" onclick="changeMonth(-1)">◀</button>
-        <h2 id="currentMonthYear"></h2>
-        <button class="nav-btn" onclick="changeMonth(1)">▶</button>
-    </header>
-    <section class="calendar-section">
-        <div class="calendar-grid">
-            <div class="day-label">S</div><div class="day-label">M</div><div class="day-label">T</div>
-            <div class="day-label">W</div><div class="day-label">T</div><div class="day-label">F</div><div class="day-label">S</div>
+<div class="page-dots"><div class="dot active" id="dot0"></div><div class="dot" id="dot1"></div></div>
+
+<div class="main-wrapper" id="mainWrapper">
+    <div class="page">
+        <header>
+            <button class="nav-btn" onclick="changeMonth(-1)">◀</button>
+            <h2 id="currentMonthYear" onclick="openGoalModal()"></h2>
+            <button class="nav-btn" onclick="changeMonth(1)">▶</button>
+        </header>
+        <section class="calendar-section">
+            <div class="calendar-grid">
+                <div class="day-label">S</div><div class="day-label">M</div><div class="day-label">T</div>
+                <div class="day-label">W</div><div class="day-label">T</div><div class="day-label">F</div><div class="day-label">S</div>
+            </div>
+            <div id="calendarDays" class="days-container"></div>
+        </section>
+        <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#cbd5e1; font-size:0.85rem; padding:20px; text-align:center;">
+            웃고 떠들며 <br> 바람을 가르자 ☁️
         </div>
-        <div id="calendarDays" class="days-container"></div>
-    </section>
-    <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#cbd5e1; font-size:0.85rem; padding:20px; text-align:center;">
-        웃고 떠들며 <br> 바람을 가르자 ☁️
+    </div>
+
+    <div class="page memo-page">
+        <div class="memo-header">
+            <h1>메모</h1>
+            <button class="nav-btn" onclick="openEditor()">새 메모</button>
+        </div>
+        <div class="memo-list-container" id="memoList"></div>
     </div>
 </div>
 
 <div class="full-todo-page" id="fullTodoPage">
     <div class="todo-header">
-        <h3 id="todoDateTitle">오늘의 업적</h3>
-        <button class="close-btn" onclick="closeTodoPage()">✕</button>
+        <h3 id="todoDateTitle">업적 관리</h3>
+        <button class="nav-btn" onclick="closeTodoPage()" style="font-size:1.5rem">✕</button>
     </div>
-    <div class="todo-content">
+    <div class="todo-content" style="padding:20px; overflow-y:auto;">
         <div id="todoDateSubtitle" style="font-weight: 700; color: var(--point-blue); margin-bottom: 15px;"></div>
         <div class="cat-bar" id="catBar"></div>
-        <div class="input-group">
-            <input type="text" id="todoInput" placeholder="업적 추가" onkeypress="if(event.keyCode==13) addTodo()">
-            <button id="addBtn" onclick="addTodo()">+</button>
+        <div class="input-group" style="display:flex; gap:8px; margin-bottom:20px;">
+            <input type="text" id="todoInput" placeholder="할 수 있다능" style="flex:1; padding:15px; border-radius:15px; border:1px solid #eee; outline:none;">
+            <button onclick="addTodo()" style="background:var(--point-blue); color:white; border:none; width:50px; border-radius:15px; font-size:1.2rem;">+</button>
         </div>
         <div id="todoList"></div>
     </div>
 </div>
 
+<div class="modal" id="goalModal" onclick="if(event.target==this) closeGoalModal()">
+    <div class="modal-content">
+        <h3 id="modalTitle">월간 목표</h3>
+        <textarea id="monthGoalText" placeholder="고민보다 go"></textarea>
+        <button onclick="closeGoalModal()" style="width:100%; padding:15px; border:none; background:var(--point-blue); color:white; border-radius:15px; font-weight:bold;">저장 및 닫기</button>
+    </div>
+</div>
+
+<div class="memo-editor" id="memoEditor">
+    <div style="padding:50px 20px 10px; display:flex; justify-content:space-between; border-bottom:1px solid #eee;">
+        <button class="nav-btn" onclick="closeEditor()">취소</button>
+        <button class="nav-btn" style="font-weight:800;" onclick="saveMemo()">완료</button>
+    </div>
+</div>
+
 <div class="action-sheet-overlay" id="actionOverlay" onclick="closeActionSheet()"></div>
 <div class="action-sheet" id="actionSheet">
-    <div class="sheet-header">
-        <button class="header-btn" style="color:#4A90E2;" onclick="handleAction('edit')">수정</button>
-        <button class="header-btn" style="color:#FF3B30;" onclick="handleAction('delete')">삭제</button>
+    <div style="display:flex; gap:10px; margin-bottom:15px;">
+        <button style="flex:1; background:white; border-radius:15px; padding:15px; border:none; color:#4A90E2; font-weight:600;" onclick="handleAction('edit')">✏️ 수정</button>
+        <button style="flex:1; background:white; border-radius:15px; padding:15px; border:none; color:#FF3B30; font-weight:600;" onclick="handleAction('delete')">🗑️ 삭제</button>
     </div>
-    <div class="action-list">
-        <div class="action-item" onclick="handleAction('tomorrow')">내일하기</div>
-        <div class="action-item" id="routineBtn" onclick="handleAction('routine')">루틴 등록</div>
+    <div style="background:white; border-radius:15px; overflow:hidden;">
+        <div style="padding:15px 20px; border-bottom:0.5px solid #eee;" onclick="handleAction('tomorrow')">내일하기</div>
+        <div id="routineBtn" style="padding:15px 20px;" onclick="handleAction('routine')">루틴 등록</div>
     </div>
 </div>
 
@@ -156,7 +174,24 @@
     let selectedDateKey = "";
     let selectedCatIdx = 0;
     let actionTargetIdx = null;
-    let data = JSON.parse(localStorage.getItem('gs_final_pro_v4')) || { todos: {}, routines: [], exceptions: {} };
+    let currentPage = 0;
+    let editingMemoId = null;
+
+    let data = JSON.parse(localStorage.getItem('gs_full_pro_final')) || { todos: {}, memos: [], routines: [], goals: {}, exceptions: {} };
+
+    // 스와이프 로직
+    let startX = 0;
+    window.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+    window.addEventListener('touchend', e => {
+        const diff = startX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 50) {
+            currentPage = diff > 0 ? 1 : 0;
+            document.getElementById('mainWrapper').style.transform = `translateX(-${currentPage * 50}%)`;
+            document.getElementById('dot0').classList.toggle('active', currentPage === 0);
+            document.getElementById('dot1').classList.toggle('active', currentPage === 1);
+            if(currentPage === 1) renderMemoList();
+        }
+    });
 
     function renderCalendar() {
         const year = currentMonth.getFullYear(), month = currentMonth.getMonth();
@@ -188,10 +223,13 @@
             const doneCount = dayTodos.filter(t => t.done).length;
             const div = document.createElement('div');
             div.className = `day ${dateKey === selectedDateKey ? 'selected' : ''}`;
-            div.style.backgroundColor = doneCount >= 3 ? 'var(--grass-2)' : doneCount >= 1 ? 'var(--grass-1)' : 'white';
+            div.style.backgroundColor = doneCount >= 3 ? 'var(--grass-3)' : doneCount >= 1 ? 'var(--grass-1)' : 'white';
             
-            div.ondragover = e => e.preventDefault();
+            // 드래그앤드롭
+            div.ondragover = e => { e.preventDefault(); div.classList.add('drag-over'); };
+            div.ondragleave = () => div.classList.remove('drag-over');
             div.ondrop = e => {
+                e.preventDefault(); div.classList.remove('drag-over');
                 const dropData = JSON.parse(e.dataTransfer.getData('todo'));
                 moveTodo(dropData.oldKey, dropData.idx, dateKey);
             };
@@ -212,11 +250,10 @@
     function selectDate(y, m, d) {
         selectedDateKey = `${y}-${m}-${d}`;
         document.getElementById('todoDateSubtitle').innerText = `할 수 있다능`;
-        openTodoPage();
+        document.getElementById('fullTodoPage').classList.add('active');
         renderCalendar(); renderCatBar(); renderTodos();
     }
 
-    function openTodoPage() { document.getElementById('fullTodoPage').classList.add('active'); }
     function closeTodoPage() { document.getElementById('fullTodoPage').classList.remove('active'); }
 
     function renderCatBar() {
@@ -247,7 +284,7 @@
                     item.className = `todo-item ${t.done ? 'done' : ''}`;
                     item.draggable = true;
                     item.ondragstart = e => e.dataTransfer.setData('todo', JSON.stringify({oldKey: selectedDateKey, idx: t.idx}));
-                    item.onclick = () => openActionSheet(t.idx);
+                    item.onclick = (e) => { if(e.target.type !== 'checkbox') openActionSheet(t.idx); };
                     item.innerHTML = `<input type="checkbox" ${t.done?'checked':''} onclick="event.stopPropagation(); toggleTodo(${t.idx})"><span style="flex:1">${t.text} ${t.routineId?'(🔄)':''}</span>`;
                     list.appendChild(item);
                 });
@@ -255,77 +292,93 @@
         });
     }
 
-    function getNumericDate(dateStr) {
-        const parts = dateStr.split('-');
-        return parseInt(parts[0]) * 10000 + parseInt(parts[1]) * 100 + parseInt(parts[2]);
-    }
-
+    // 루틴 삭제 및 일반 삭제
     function handleAction(type) {
         const currentTodo = data.todos[selectedDateKey][actionTargetIdx];
         const rid = currentTodo.routineId;
 
         if(type === 'delete') {
             if(rid) {
-                const choice = prompt("루틴 삭제 옵션:\n1. 이 날짜만 삭제\n2. 과거/미래 모든 루틴 삭제\n3. 오늘 포함 이후 루틴만 삭제", "1");
+                const choice = prompt("루틴 삭제:\n1.이 날짜만\n2.전체삭제\n3.이후삭제", "1");
                 if(choice === "1") {
                     if(!data.exceptions[selectedDateKey]) data.exceptions[selectedDateKey] = [];
                     data.exceptions[selectedDateKey].push(rid);
                     data.todos[selectedDateKey].splice(actionTargetIdx, 1);
                 } else if(choice === "2") {
                     data.routines = data.routines.filter(r => r.id !== rid);
-                    Object.keys(data.todos).forEach(date => {
-                        data.todos[date] = data.todos[date].filter(t => t.routineId !== rid);
-                    });
+                    Object.keys(data.todos).forEach(d => data.todos[d] = data.todos[d].filter(t => t.routineId !== rid));
                 } else if(choice === "3") {
-                    const targetNum = getNumericDate(selectedDateKey);
+                    const targetNum = parseInt(selectedDateKey.split('-').join(''));
                     data.routines = data.routines.filter(r => r.id !== rid);
-                    Object.keys(data.todos).forEach(date => {
-                        if(getNumericDate(date) >= targetNum) {
-                            data.todos[date] = data.todos[date].filter(t => t.routineId !== rid);
-                        }
-                    });
+                    Object.keys(data.todos).forEach(d => { if(parseInt(d.split('-').join('')) >= targetNum) data.todos[d] = data.todos[d].filter(t => t.routineId !== rid); });
                 }
             } else {
                 data.todos[selectedDateKey].splice(actionTargetIdx, 1);
             }
         } else if(type === 'edit') {
-            const newText = prompt("수정할 내용을 입력하세요", currentTodo.text);
-            if(newText) currentTodo.text = newText;
+            const txt = prompt("수정", currentTodo.text);
+            if(txt) currentTodo.text = txt;
         } else if(type === 'tomorrow') {
             const [y, m, d] = selectedDateKey.split('-').map(Number);
             const next = new Date(y, m-1, d+1);
-            const nextKey = `${next.getFullYear()}-${next.getMonth()+1}-${next.getDate()}`;
-            const todo = data.todos[selectedDateKey].splice(actionTargetIdx, 1)[0];
-            if(!data.todos[nextKey]) data.todos[nextKey] = [];
-            data.todos[nextKey].push(todo);
+            moveTodo(selectedDateKey, actionTargetIdx, `${next.getFullYear()}-${next.getMonth()+1}-${next.getDate()}`);
             closeTodoPage();
         } else if(type === 'routine') {
-            const dayOfWeek = new Date(selectedDateKey.replace(/-/g, '/')).getDay();
+            const day = new Date(selectedDateKey.replace(/-/g, '/')).getDay();
             const newRid = Date.now();
-            data.routines.push({id: newRid, text: currentTodo.text, cat: currentTodo.cat, day: dayOfWeek});
+            data.routines.push({id: newRid, text: currentTodo.text, cat: currentTodo.cat, day});
             currentTodo.routineId = newRid;
         }
         save(); closeActionSheet();
     }
 
-    function moveTodo(oldKey, idx, newKey) {
-        const todo = data.todos[oldKey].splice(idx, 1)[0];
-        if(!data.todos[newKey]) data.todos[newKey] = [];
-        data.todos[newKey].push(todo);
-        save();
-    }
-
-    function openActionSheet(idx) { 
-        actionTargetIdx = idx; 
-        const t = data.todos[selectedDateKey][idx];
-        document.getElementById('routineBtn').style.display = t.routineId ? 'none' : 'flex';
-        document.getElementById('actionSheet').classList.add('active'); 
-        document.getElementById('actionOverlay').style.display = 'block'; 
-    }
+    function moveTodo(oldK, idx, newK) { const todo = data.todos[oldK].splice(idx, 1)[0]; if(!data.todos[newK]) data.todos[newK] = []; data.todos[newK].push(todo); save(); }
+    function openActionSheet(idx) { actionTargetIdx = idx; document.getElementById('routineBtn').style.display = data.todos[selectedDateKey][idx].routineId ? 'none' : 'block'; document.getElementById('actionSheet').classList.add('active'); document.getElementById('actionOverlay').style.display = 'block'; }
     function closeActionSheet() { document.getElementById('actionSheet').classList.remove('active'); document.getElementById('actionOverlay').style.display = 'none'; }
     function addTodo() { const val = document.getElementById('todoInput').value; if(!val) return; if(!data.todos[selectedDateKey]) data.todos[selectedDateKey] = []; data.todos[selectedDateKey].push({text: val, cat: CATEGORIES[selectedCatIdx].name, done: false}); document.getElementById('todoInput').value = ''; save(); }
     function toggleTodo(i) { data.todos[selectedDateKey][i].done = !data.todos[selectedDateKey][i].done; save(); }
-    function save() { localStorage.setItem('gs_final_pro_v4', JSON.stringify(data)); renderTodos(); renderCalendar(); }
+
+    // 목표 설정
+    function openGoalModal() {
+        const monthKey = `${currentMonth.getFullYear()}-${currentMonth.getMonth()+1}`;
+        document.getElementById('modalTitle').innerText = `${currentMonth.getMonth()+1}월의 목표`;
+        document.getElementById('monthGoalText').value = data.goals[monthKey] || "";
+        document.getElementById('goalModal').style.display = 'flex';
+    }
+    function closeGoalModal() {
+        const monthKey = `${currentMonth.getFullYear()}-${currentMonth.getMonth()+1}`;
+        data.goals[monthKey] = document.getElementById('monthGoalText').value;
+        save(); document.getElementById('goalModal').style.display = 'none';
+    }
+
+    // 메모 관리
+    function renderMemoList() {
+        const list = document.getElementById('memoList'); list.innerHTML = '';
+        if(!data.memos.length) { list.innerHTML = '<div style="padding:40px; text-align:center; color:#999;">메모가 없습니다.</div>'; return; }
+        data.memos.sort((a,b)=>b.id-a.id).forEach(m => {
+            const item = document.createElement('div');
+            item.className = 'memo-item';
+            item.innerHTML = `<div style="flex:1" onclick='openEditor(${JSON.stringify(m)})'><div class="memo-title">${m.content.split('\n')[0]}</div><small>${m.date}</small></div><div class="memo-delete-btn" onclick="deleteMemo(${m.id})">✕</div>`;
+            list.appendChild(item);
+        });
+    }
+    function openEditor(m=null) {
+        document.getElementById('memoEditor').style.display = 'flex';
+        editingMemoId = m ? m.id : null;
+        document.getElementById('editorBody').value = m ? m.content : '';
+        document.getElementById('editorBody').focus();
+    }
+    function closeEditor() { document.getElementById('memoEditor').style.display = 'none'; }
+    function saveMemo() {
+        const content = document.getElementById('editorBody').value;
+        if(!content.trim()) return closeEditor();
+        if(editingMemoId) data.memos.find(m=>m.id===editingMemoId).content = content;
+        else data.memos.push({id:Date.now(), content, date:new Date().toLocaleDateString()});
+        save(); closeEditor(); renderMemoList();
+    }
+    function deleteMemo(id) { if(confirm("삭제?")) { data.memos = data.memos.filter(m=>m.id!==id); save(); renderMemoList(); } }
+
+    function save() { localStorage.setItem('gs_full_pro_final', JSON.stringify(data)); renderTodos(); renderCalendar(); }
     function changeMonth(o) { currentMonth.setMonth(currentMonth.getMonth()+o); renderCalendar(); }
 
     renderCalendar();
