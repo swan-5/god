@@ -1,0 +1,260 @@
+/* --- 1. 기본 스타일 정의 --- */
+:root {
+    --bg-color: #F0F8FF;         /* 아주 연한 파스텔 하늘색 배경 */
+    --card-color: #FFFFFF;       /* 깨끗한 화이트 */
+    --point-color: #A2D2FF;      /* 생기 있는 포인트 하늘색 */
+    --point-hover: #8ECAFE;      /* 호버 시 조금 더 진한 색 */
+    --text-primary: #4A5568;     /* 차분한 다크 그레이 */
+    --text-secondary: #718096;   /* 연한 그레이 */
+    --border-color: #E2E8F0;     /* 아주 연한 테두리 */
+}
+
+body {
+    background-color: var(--bg-color);
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    color: var(--text-primary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    -webkit-font-smoothing: antialiased; /* 폰트 매끄럽게 */
+}
+
+/* --- 2. 앱 전체 컨테이너 --- */
+.app-wrapper {
+    display: flex;
+    gap: 40px;                   /* 캘린더와 투두 사이 여백 대폭 증가 */
+    background: var(--card-color);
+    padding: 50px;               /* 내부 여백 증가 */
+    border-radius: 30px;         /* 더 둥근 모서리 */
+    box-shadow: 0 20px 60px rgba(162, 210, 255, 0.15); /* 부드럽고 넓은 그림자 */
+    width: 900px;                /* 전체 너비 살짝 증가 */
+    max-width: 90%;
+}
+
+/* --- 3. 캘린더 섹션 디자인 --- */
+.calendar-container {
+    flex: 1.3;
+    /* 이전의 테두리 제거 */
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 0 10px;
+}
+
+.calendar-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.calendar-header button {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    border-radius: 12px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.calendar-header button:hover {
+    background-color: #F8FAFC;
+    border-color: #CBD5E1;
+    color: var(--text-primary);
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px; /* 날짜 사이 간격 */
+    text-align: center;
+}
+
+.day-label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--point-color);   /* 요일 색상을 포인트 컬러로 */
+    padding-bottom: 15px;
+    text-transform: uppercase;
+}
+
+/* 날짜 스타일 */
+.days-container div {
+    aspect-ratio: 1;             /* 정사각형 유지 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 50%;          /* 기본 모서리 */
+    font-size: 1rem;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+/* 공백 날짜 호버 방지 */
+.days-container div.empty:hover {
+    background-color: transparent;
+    cursor: default;
+}
+
+/* 일반 날짜 호버 */
+.days-container div:not(.empty):hover {
+    background-color: #EBF8FF;   /* 연한 포인트 배경 */
+    color: var(--point-color);
+}
+
+/* !!! 선택된 날짜 강조 디자인 (핵심) !!! */
+.days-container div.selected-day {
+    background-color: var(--point-color) !important;
+    color: white !important;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(162, 210, 255, 0.4);
+}
+
+/* --- 4. 할 일(Todo) 섹션 디자인 --- */
+.todo-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.todo-header {
+    margin-bottom: 25px;
+}
+
+.todo-header h3 {
+    font-size: 1.3rem;
+    margin: 0;
+    font-weight: 600;
+}
+
+#selectedDate {
+    color: var(--point-color);   /* 날짜를 포인트 컬러로 */
+}
+
+/* 입력창 그룹 */
+.todo-input-group {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+#todoInput {
+    flex: 1;
+    border: 2px solid #E2E8F0;  /* 더 깨끗한 테두리 */
+    border-radius: 15px;         /* 더 둥글게 */
+    padding: 12px 15px;
+    outline: none;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+#todoInput:focus {
+    border-color: var(--point-color);
+}
+
+#todoInput::placeholder {
+    color: #A0AEC0;
+}
+
+/* 추가 버튼 */
+#addTodoBtn {
+    background-color: var(--point-color);
+    color: white;
+    border: none;
+    border-radius: 15px;
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
+    font-weight: 300;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#addTodoBtn:hover {
+    background-color: var(--point-hover);
+}
+
+#addTodoBtn:active {
+    transform: scale(0.95);
+}
+
+/* --- 5. 할 일 목록 스타일 --- */
+.todo-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;           /* 목록이 길어지면 스크롤 */
+    max-height: 400px;          /* 최대 높이 지정 */
+}
+
+/* 스크롤바 디자인 (선택사항) */
+.todo-list::-webkit-scrollbar {
+    width: 6px;
+}
+.todo-list::-webkit-scrollbar-thumb {
+    background-color: #E2E8F0;
+    border-radius: 3px;
+}
+
+.todo-item {
+    background: #F8FAFC;         /* 깨끗하고 미세한 회색 배경 */
+    margin-bottom: 12px;
+    padding: 15px;
+    border-radius: 15px;         /* 둥글게 */
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.todo-item:hover {
+    background-color: #F1F5F9;
+    border-color: #E2E8F0;
+}
+
+/* 체크박스 디자인 커스텀 (핵심) */
+.todo-item input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--point-color);
+    border-radius: 50%;          /* 원형 체크박스 */
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.todo-item input[type="checkbox"]:checked {
+    background-color: var(--point-color);
+}
+
+.todo-item input[type="checkbox"]:checked::after {
+    content: '✓';                /* 체크 표시 */
+    color: white;
+    font-size: 14px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* 완료된 할 일 텍스트 */
+.todo-item.done span {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+    opacity: 0.7;
+}

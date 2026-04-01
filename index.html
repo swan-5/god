@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>갓생 메이트 ☁️</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    <style>
+        :root {
+            --bg-color: #F0F8FF;
+            --card-color: #FFFFFF;
+            --text-main: #4A5568;
+            --point-blue: #A2D2FF;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Pretendard', sans-serif; background: var(--bg-color); }
+
+        /* 페이지 컨테이너 및 스와이프 설정 */
+        .main-container {
+            display: flex;
+            width: 300%; /* 3개 페이지 */
+            height: 100vh;
+            transition: transform 0.3s ease-out;
+            max-width: 1440px; /* PC 대응용이지만 기본은 모바일 최적화 */
+        }
+
+        .page {
+            width: 33.333%;
+            height: 100%;
+            background: var(--card-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 상단 탭 인디케이터 */
+        .tab-bar {
+            display: flex; justify-content: center; gap: 20px;
+            padding: 15px 0; background: white; border-bottom: 1px solid #edf2f7;
+            position: fixed; top: 0; width: 100%; z-index: 50;
+        }
+        .tab-item { font-size: 0.85rem; color: #cbd5e0; font-weight: 700; transition: 0.3s; }
+        .tab-item.active { color: var(--point-blue); transform: scale(1.1); }
+
+        /* 공통 헤더 스타일 */
+        header { padding: 60px 20px 10px; display: flex; justify-content: space-between; align-items: center; }
+        header h2 { margin: 0; font-size: 1.3rem; font-weight: 800; }
+        .nav-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--point-blue); padding: 5px; }
+
+        /* --- 1페이지: 캘린더 --- */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); padding: 0 10px; }
+        .day-label { padding: 10px 0; font-size: 0.75rem; text-align: center; font-weight: 700; color: #CBD5E0; }
+        .days-container { display: grid; grid-template-columns: repeat(7, 1fr); padding: 0 10px; flex: 1; overflow-y: auto; }
+        .day { height: 95px; border-bottom: 1px solid #F7FAFC; padding: 8px 5px; font-size: 0.9rem; cursor: pointer; }
+        .day.today { color: var(--point-blue); font-weight: 800; }
+        .day.selected { background-color: #EBF8FF; border-radius: 12px; box-shadow: inset 0 0 0 2px var(--point-blue); }
+        .mini-todo { font-size: 0.55rem; margin-top: 2px; padding: 1px 4px; border-radius: 3px; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* 투두 시트 */
+        .todo-sheet {
+            position: fixed; bottom: -100%; left: 0; right: 0;
+            background: white; border-radius: 30px 30px 0 0;
+            box-shadow: 0 -15px 35px rgba(162, 210, 255, 0.2);
+            padding: 25px; transition: bottom 0.35s ease;
+            max-height: 80vh; z-index: 100; display: flex; flex-direction: column;
+        }
+        .todo-sheet.active { bottom: 0; }
+        .handle { width: 45px; height: 5px; background: #E2E8F0; border-radius: 10px; margin: 0 auto 15px; }
+        .cat-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 15px; }
+        .cat-chip { padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; background: #F7FAFC; white-space: nowrap; }
+        .cat-chip.active { background: var(--point-blue); color: white; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        #todoInput { flex: 1; padding: 14px; border: 2px solid #f0f4f8; border-radius: 15px; outline: none; }
+        #addBtn { background: var(--point-blue); color: white; border: none; width: 50px; border-radius: 15px; font-size: 1.5rem; }
+        #todoList { overflow-y: auto; flex: 1; }
+        .todo-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #F8FAFC; border-radius: 12px; margin-bottom: 8px; }
+        .todo-item.done { opacity: 0.5; text-decoration: line-through; }
+
+        /* --- 2페이지: 이달의 목표 / 3페이지: 메모 --- */
+        .content-area { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .goal-input-box { margin-bottom: 20px; }
+        textarea {
+            width: 100%; flex: 1; border: none; background: #f8fafc; border-radius: 20px;
+            padding: 20px; font-size: 1rem; line-height: 1.6; outline: none; resize: none;
+            color: var(--text-main);
+        }
+        .info-txt { font-size: 0.8rem; color: #a0aec0; margin-bottom: 10px; }
+
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); display: none; z-index: 90; backdrop-filter: blur(2px); }
+    </style>
+</head>
+<body>
+
+<div class="tab-bar">
+    <div class="tab-item active" id="tab0">CALENDAR</div>
+    <div class="tab-item" id="tab1">GOALS</div>
+    <div class="tab-item" id="tab2">MEMO</div>
+</div>
+
+<div class="main-container" id="mainContainer">
+    <div class="page">
+        <header>
+            <button class="nav-btn" onclick="changeMonth(-1)">◀</button>
+            <h2 id="currentMonthYear"></h2>
+            <button class="nav-btn" onclick="changeMonth(1)">▶</button>
+        </header>
+        <div class="calendar-grid">
+            <div class="day-label">S</div><div class="day-label">M</div><div class="day-label">T</div>
+            <div class="day-label">W</div><div class="day-label">T</div><div class="day-label">F</div><div class="day-label">S</div>
+        </div>
+        <div id="calendarDays" class="days-container"></div>
+    </div>
+
+    <div class="page">
+        <header><h2>이달의 목표 🏁</h2></header>
+        <div class="content-area">
+            <p class="info-txt">이번 달 꼭 이루고 싶은 갓생 목표들을 적어보세요.</p>
+            <textarea id="goalText" placeholder="1. 자격증 공부 시작하기&#10;2. 주 3회 운동 가기..." oninput="saveGoals()"></textarea>
+        </div>
+    </div>
+
+    <div class="page">
+        <header><h2>자유 메모 📝</h2></header>
+        <div class="content-area">
+            <p class="info-txt">갑자기 떠오른 생각이나 중요한 내용을 기록하세요.</p>
+            <textarea id="memoText" placeholder="여기에 자유롭게 메모하세요..." oninput="saveMemo()"></textarea>
+        </div>
+    </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeSheet()"></div>
+<div class="todo-sheet" id="todoSheet">
+    <div class="handle"></div>
+    <h3 id="sheetDateTitle" style="margin:0 0 15px 0"></h3>
+    <div class="cat-scroll" id="categoryBar"></div>
+    <div class="input-group">
+        <input type="text" id="todoInput" placeholder="할 일 입력..." onkeypress="if(event.keyCode==13) addTodo()">
+        <button id="addBtn" onclick="addTodo()">+</button>
+    </div>
+    <div id="todoList"></div>
+</div>
+
+<script>
+    // 상태 관리
+    let currentPage = 0;
+    let startX = 0;
+    let currentMonth = new Date();
+    let selectedDateKey = "";
+    let selectedCatIdx = 0;
+
+    const CATEGORIES = [
+        {name:'과제', color:'#FFADAD'}, {name:'공부', color:'#CAFFBF'}, 
+        {name:'대외활동', color:'#FDFFB6'}, {name:'일', color:'#C1FFB3'},
+        {name:'팀플', color:'#FFADAD'}, {name:'놀기', color:'#FFD1DC'}, {name:'기타', color:'#D1D1D1'}
+    ];
+
+    let todos = JSON.parse(localStorage.getItem('gs_todos')) || {};
+    document.getElementById('goalText').value = localStorage.getItem('gs_goals') || "";
+    document.getElementById('memoText').value = localStorage.getItem('gs_memo') || "";
+
+    // --- 스와이프 로직 ---
+    const container = document.getElementById('mainContainer');
+    window.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+    window.addEventListener('touchend', e => {
+        const diff = startX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 50) {
+            if (diff > 0 && currentPage < 2) currentPage++;
+            else if (diff < 0 && currentPage > 0) currentPage--;
+            updatePage();
+        }
+    });
+
+    function updatePage() {
+        container.style.transform = `translateX(-${(currentPage * 100) / 3}%)`;
+        document.querySelectorAll('.tab-item').forEach((t, i) => {
+            t.classList.toggle('active', i === currentPage);
+        });
+    }
+
+    // --- 캘린더 로직 ---
+    function renderCalendar() {
+        const year = currentMonth.getFullYear(), month = currentMonth.getMonth();
+        document.getElementById('currentMonthYear').innerText = `${year}년 ${month + 1}월`;
+        const firstDay = new Date(year, month, 1).getDay();
+        const lastDate = new Date(year, month + 1, 0).getDate();
+        const daysWrap = document.getElementById('calendarDays');
+        daysWrap.innerHTML = '';
+
+        for (let i = 0; i < firstDay; i++) daysWrap.innerHTML += `<div class="day"></div>`;
+        for (let i = 1; i <= lastDate; i++) {
+            const dateKey = `${year}-${month+1}-${i}`;
+            const div = document.createElement('div');
+            div.className = `day ${dateKey === selectedDateKey ? 'selected' : ''}`;
+            if(year===new Date().getFullYear() && month===new Date().getMonth() && i===new Date().getDate()) div.classList.add('today');
+            div.innerHTML = `<b>${i}</b>`;
+            
+            if(todos[dateKey]) {
+                todos[dateKey].slice(0, 2).forEach(t => {
+                    const m = document.createElement('div');
+                    m.className = `mini-todo`;
+                    m.style.backgroundColor = t.color;
+                    m.innerText = t.text;
+                    div.appendChild(m);
+                });
+            }
+            div.onclick = () => openSheet(year, month+1, i);
+            daysWrap.appendChild(div);
+        }
+    }
+
+    function openSheet(y, m, d) {
+        selectedDateKey = `${y}-${m}-${d}`;
+        document.getElementById('sheetDateTitle').innerText = `${m}월 ${d}일 일정`;
+        document.getElementById('todoSheet').classList.add('active');
+        document.getElementById('overlay').style.display = 'block';
+        renderCatBar(); renderTodos(); renderCalendar();
+    }
+
+    function closeSheet() {
+        document.getElementById('todoSheet').classList.remove('active');
+        document.getElementById('overlay').style.display = 'none';
+    }
+
+    function renderCatBar() {
+        const bar = document.getElementById('categoryBar');
+        bar.innerHTML = '';
+        CATEGORIES.forEach((c, i) => {
+            const chip = document.createElement('div');
+            chip.className = `cat-chip ${selectedCatIdx === i ? 'active' : ''}`;
+            chip.innerText = c.name;
+            if(selectedCatIdx === i) chip.style.backgroundColor = c.color;
+            chip.onclick = () => { selectedCatIdx = i; renderCatBar(); };
+            bar.appendChild(chip);
+        });
+    }
+
+    function renderTodos() {
+        const list = document.getElementById('todoList');
+        list.innerHTML = '';
+        const dayTodos = todos[selectedDateKey] || [];
+        dayTodos.sort((a,b) => a.done - b.done).forEach((t, i) => {
+            const item = document.createElement('div');
+            item.className = `todo-item ${t.done ? 'done' : ''}`;
+            item.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px" onclick="toggleTodo(${i})">
+                    <div style="width:10px; height:10px; border-radius:50%; background:${t.color}"></div>
+                    <span>${t.text}</span>
+                </div>
+                <small onclick="deleteTodo(${i})" style="color:#ffadad">삭제</small>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    function addTodo() {
+        const val = document.getElementById('todoInput').value;
+        if(!val) return;
+        if(!todos[selectedDateKey]) todos[selectedDateKey] = [];
+        const cat = CATEGORIES[selectedCatIdx];
+        todos[selectedDateKey].push({text: val, color: cat.color, done: false});
+        document.getElementById('todoInput').value = '';
+        save();
+    }
+
+    function toggleTodo(i) { todos[selectedDateKey][i].done = !todos[selectedDateKey][i].done; save(); }
+    function deleteTodo(i) { todos[selectedDateKey].splice(i, 1); save(); }
+    function save() { localStorage.setItem('gs_todos', JSON.stringify(todos)); renderTodos(); renderCalendar(); }
+    function saveGoals() { localStorage.setItem('gs_goals', document.getElementById('goalText').value); }
+    function saveMemo() { localStorage.setItem('gs_memo', document.getElementById('memoText').value); }
+    function changeMonth(o) { currentMonth.setMonth(currentMonth.getMonth()+o); renderCalendar(); }
+
+    renderCalendar();
+</script>
+</body>
+</html>
