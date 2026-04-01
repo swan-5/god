@@ -32,7 +32,7 @@
         .nav-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--point-blue); padding: 5px; }
 
         /* 캘린더 스타일 */
-        .calendar-section { background: white; padding-bottom: 20px; border-bottom: 1px solid #f1f5f9; flex-shrink: 0; }
+        .calendar-section { background: white; padding-bottom: 10px; border-bottom: 1px solid #f1f5f9; flex-shrink: 0; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); padding: 0 10px; }
         .day-label { padding: 8px 0; font-size: 0.65rem; text-align: center; font-weight: 700; color: #94a3b8; }
         .days-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 0 10px; }
@@ -42,17 +42,23 @@
             padding-top: 5px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; overflow: hidden;
         }
         .day.selected { border: 1.5px solid var(--text-main) !important; }
-        .day.drag-over { background-color: var(--grass-1) !important; transform: scale(1.05); border: 2px dashed var(--point-blue); }
 
         .day-todo-list { width: 100%; padding: 2px; display: flex; flex-direction: column; gap: 2px; margin-top: 3px; }
         .day-todo-item { 
-            font-size: 0.5rem; border-radius: 2px; padding: 1px 3px; 
+            font-size: 0.45rem; border-radius: 2px; padding: 1px 2px; 
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-            color: white; font-weight: 600; line-height: 1.2;
+            color: white; font-weight: 600; line-height: 1.1;
         }
         .day-todo-item.done { opacity: 0.4; text-decoration: line-through; }
 
-        /* 메모 페이지 스타일 */
+        /* [추가] 하단 여백 투두 리스트 스타일 */
+        .bottom-preview { flex: 1; overflow-y: auto; padding: 20px; background: var(--bg-color); }
+        .preview-title { font-size: 0.9rem; font-weight: 800; margin-bottom: 15px; color: #64748b; display: flex; align-items: center; justify-content: space-between; }
+        .preview-item { display: flex; align-items: center; gap: 10px; background: white; padding: 12px 15px; border-radius: 12px; margin-bottom: 8px; font-size: 0.85rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .preview-item.done { opacity: 0.5; }
+        .preview-item.done span { text-decoration: line-through; }
+
+        /* 메모 및 기타 */
         .memo-page { background-color: var(--ios-bg); display: flex; flex-direction: column; }
         .memo-header { padding: 50px 25px 10px; display: flex; justify-content: space-between; align-items: flex-end; }
         .memo-header h1 { font-size: 2rem; margin: 0; font-weight: 800; }
@@ -62,7 +68,6 @@
         .memo-title { font-weight: 700; font-size: 0.95rem; }
         .memo-delete-btn { color: #ff3b30; font-size: 1.2rem; padding: 5px; opacity: 0.3; }
 
-        /* 전체 화면 할 일 페이지 */
         .full-todo-page { position: fixed; top: 100%; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 1000; transition: top 0.4s cubic-bezier(0.25, 1, 0.5, 1); display: flex; flex-direction: column; }
         .full-todo-page.active { top: 0; }
         .todo-header { background: white; padding: 50px 20px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; }
@@ -74,15 +79,12 @@
         .todo-item { display: flex; align-items: center; gap: 12px; padding: 18px; background: white; border-radius: 18px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
         .todo-item.done { opacity: 0.5; text-decoration: line-through; }
         
-        /* 카테고리 타이틀 스타일 */
         .cat-title { font-size: 0.9rem; font-weight: 800; margin: 25px 0 12px; display: flex; align-items: center; gap: 8px; }
 
-        /* 모달 스타일 (목표 설정용) */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 20px; backdrop-filter: blur(4px); }
         .modal-content { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 25px; }
         #monthGoalText { width: 100%; height: 150px; border: 1px solid #f1f5f9; border-radius: 15px; padding: 15px; margin: 15px 0; outline: none; resize: none; font-family: inherit; font-size: 1rem; }
 
-        /* 메모 에디터 */
         .memo-editor { position: fixed; inset: 0; background: white; z-index: 4000; display: none; flex-direction: column; }
         #editorBody { flex: 1; padding: 20px; font-size: 1.1rem; border: none; outline: none; resize: none; }
 
@@ -113,8 +115,11 @@
             </div>
             <div id="calendarDays" class="days-container"></div>
         </section>
-        <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#cbd5e1; font-size:0.85rem; padding:20px; text-align:center;">
-            웃고 떠들며 <br> 바람을 가르자 ☁️
+        
+        <div class="bottom-preview" id="bottomPreview">
+            <div style="height:100%; display:flex; align-items:center; justify-content:center; color:#cbd5e1; text-align:center; font-size:0.85rem;">
+                날짜를 선택해 보세요 ☁️
+            </div>
         </div>
     </div>
 
@@ -232,15 +237,6 @@
             div.className = `day ${dateKey === selectedDateKey ? 'selected' : ''}`;
             div.style.backgroundColor = doneCount >= 3 ? 'var(--grass-3)' : doneCount >= 1 ? 'var(--grass-1)' : 'white';
             
-            // 드래그앤드롭
-            div.ondragover = e => { e.preventDefault(); div.classList.add('drag-over'); };
-            div.ondragleave = () => div.classList.remove('drag-over');
-            div.ondrop = e => {
-                e.preventDefault(); div.classList.remove('drag-over');
-                const dropData = JSON.parse(e.dataTransfer.getData('todo'));
-                moveTodo(dropData.oldKey, dropData.idx, dateKey);
-            };
-
             let todoHtml = '<div class="day-todo-list">';
             dayTodos.slice(0, 3).forEach(t => {
                 const c = CATEGORIES.find(cat => cat.name === t.cat) || CATEGORIES[5];
@@ -252,13 +248,42 @@
             div.onclick = () => selectDate(year, month+1, i);
             daysWrap.appendChild(div);
         }
+        // [추가] 캘린더 렌더링 시 하단 미리보기도 업데이트
+        renderBottomPreview();
     }
 
     function selectDate(y, m, d) {
         selectedDateKey = `${y}-${m}-${d}`;
+        // 1. 하단 미리보기 갱신
+        renderBottomPreview();
+        // 2. 기존 상세 페이지 팝업 띄우기
         document.getElementById('todoDateSubtitle').innerText = `오늘의 업적`;
         document.getElementById('fullTodoPage').classList.add('active');
         renderCalendar(); renderCatBar(); renderTodos();
+    }
+
+    // [추가] 하단 여백에 리스트를 그려주는 함수
+    function renderBottomPreview() {
+        const preview = document.getElementById('bottomPreview');
+        if(!selectedDateKey) return;
+        
+        const dayTodos = data.todos[selectedDateKey] || [];
+        if(dayTodos.length === 0) {
+            preview.innerHTML = `<div class="preview-title"><span>${selectedDateKey}</span></div><div style="color:#cbd5e1; font-size:0.8rem; text-align:center; padding-top:20px;">할 일이 없습니다.</div>`;
+            return;
+        }
+
+        let html = `<div class="preview-title"><span>${selectedDateKey}</span></div>`;
+        dayTodos.forEach((t, idx) => {
+            const cat = CATEGORIES.find(c => c.name === t.cat) || CATEGORIES[5];
+            html += `
+                <div class="preview-item ${t.done ? 'done' : ''}" onclick="toggleTodo(${idx})">
+                    <div style="width:4px; height:14px; background:${cat.color}; border-radius:2px;"></div>
+                    <span style="flex:1">${t.text}</span>
+                    <input type="checkbox" ${t.done ? 'checked' : ''} style="accent-color:var(--point-blue)">
+                </div>`;
+        });
+        preview.innerHTML = html;
     }
 
     function closeTodoPage() { document.getElementById('fullTodoPage').classList.remove('active'); }
@@ -285,13 +310,10 @@
 
         CATEGORIES.forEach(cat => {
             if (groups[cat.name]) {
-                // 카테고리 타이틀에 컬러 적용
                 list.innerHTML += `<div class="cat-title" style="color:${cat.color}"><span style="width:10px;height:10px;border-radius:50%;background:${cat.color}"></span>${cat.name}</div>`;
                 groups[cat.name].forEach(t => {
                     const item = document.createElement('div');
                     item.className = `todo-item ${t.done ? 'done' : ''}`;
-                    item.draggable = true;
-                    item.ondragstart = e => e.dataTransfer.setData('todo', JSON.stringify({oldKey: selectedDateKey, idx: t.idx}));
                     item.onclick = (e) => { if(e.target.type !== 'checkbox') openActionSheet(t.idx); };
                     item.innerHTML = `<input type="checkbox" ${t.done?'checked':''} onclick="event.stopPropagation(); toggleTodo(${t.idx})"><span style="flex:1">${t.text} ${t.routineId?'(🔄)':''}</span>`;
                     list.appendChild(item);
@@ -300,7 +322,6 @@
         });
     }
 
-    // 루틴 삭제 및 일반 삭제
     function handleAction(type) {
         const currentTodo = data.todos[selectedDateKey][actionTargetIdx];
         const rid = currentTodo.routineId;
@@ -344,9 +365,12 @@
     function openActionSheet(idx) { actionTargetIdx = idx; document.getElementById('routineBtn').style.display = data.todos[selectedDateKey][idx].routineId ? 'none' : 'block'; document.getElementById('actionSheet').classList.add('active'); document.getElementById('actionOverlay').style.display = 'block'; }
     function closeActionSheet() { document.getElementById('actionSheet').classList.remove('active'); document.getElementById('actionOverlay').style.display = 'none'; }
     function addTodo() { const val = document.getElementById('todoInput').value; if(!val) return; if(!data.todos[selectedDateKey]) data.todos[selectedDateKey] = []; data.todos[selectedDateKey].push({text: val, cat: CATEGORIES[selectedCatIdx].name, done: false}); document.getElementById('todoInput').value = ''; save(); }
-    function toggleTodo(i) { data.todos[selectedDateKey][i].done = !data.todos[selectedDateKey][i].done; save(); }
+    
+    function toggleTodo(i) { 
+        data.todos[selectedDateKey][i].done = !data.todos[selectedDateKey][i].done; 
+        save(); 
+    }
 
-    // 목표 설정
     function openGoalModal() {
         const monthKey = `${currentMonth.getFullYear()}-${currentMonth.getMonth()+1}`;
         document.getElementById('modalTitle').innerText = `${currentMonth.getMonth()+1}월의 목표`;
@@ -359,7 +383,6 @@
         save(); document.getElementById('goalModal').style.display = 'none';
     }
 
-    // 메모 관리
     function renderMemoList() {
         const list = document.getElementById('memoList'); list.innerHTML = '';
         if(!data.memos.length) { list.innerHTML = '<div style="padding:40px; text-align:center; color:#999;">메모가 없습니다.</div>'; return; }
@@ -386,7 +409,11 @@
     }
     function deleteMemo(id) { if(confirm("삭제?")) { data.memos = data.memos.filter(m=>m.id!==id); save(); renderMemoList(); } }
 
-    function save() { localStorage.setItem('gs_full_pro_final', JSON.stringify(data)); renderTodos(); renderCalendar(); }
+    function save() { 
+        localStorage.setItem('gs_full_pro_final', JSON.stringify(data)); 
+        renderCalendar(); 
+        if(document.getElementById('fullTodoPage').classList.contains('active')) renderTodos();
+    }
     function changeMonth(o) { currentMonth.setMonth(currentMonth.getMonth()+o); renderCalendar(); }
 
     renderCalendar();
