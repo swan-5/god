@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <link rel="apple-touch-icon" href="chichi.jpg">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"> 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>갓생 가든 Pro ☁️</title>
@@ -19,25 +22,24 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Pretendard', sans-serif; background: var(--bg-color); color: var(--text-main); overflow: hidden; }
 
-        .main-wrapper { display: flex; width: 200%; height: 100vh; transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
-        .page { width: 50%; height: 100%; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        /* 메인 캘린더 페이지 */
+        .page { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
         header { padding: 40px 20px 10px; display: flex; justify-content: space-between; align-items: center; background: white; flex-shrink: 0; }
-        header h2 { margin: 0; font-size: 1.1rem; font-weight: 800; cursor: pointer; }
+        header h2 { margin: 0; font-size: 1.1rem; font-weight: 800; }
         .nav-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--point-blue); padding: 5px; }
 
         /* 캘린더 스타일 */
-        .calendar-section { background: white; padding-bottom: 15px; border-bottom: 1px solid #f1f5f9; flex-shrink: 0; }
+        .calendar-section { background: white; padding-bottom: 20px; border-bottom: 1px solid #f1f5f9; flex-shrink: 0; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); padding: 0 10px; }
         .day-label { padding: 8px 0; font-size: 0.65rem; text-align: center; font-weight: 700; color: #94a3b8; }
         .days-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 0 10px; }
         .day { 
-            aspect-ratio: 1 / 1.3; border-radius: 6px; border: 1px solid #f8fafc;
+            aspect-ratio: 1 / 1.3; border-radius: 8px; border: 1px solid #f8fafc;
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
             padding-top: 5px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; overflow: hidden;
         }
         .day.selected { border: 1.5px solid var(--text-main) !important; }
-        /* 드래그 오버 시 시각적 효과 */
         .day.drag-over { background-color: var(--grass-1) !important; transform: scale(1.05); border: 2px dashed var(--point-blue); }
 
         .day-todo-list { width: 100%; padding: 2px; display: flex; flex-direction: column; gap: 2px; margin-top: 3px; }
@@ -48,64 +50,87 @@
         }
         .day-todo-item.done { opacity: 0.4; text-decoration: line-through; }
 
-        /* 하단 투두 섹션 */
-        .inline-todo-section { flex: 1; overflow-y: auto; padding: 20px; background: var(--bg-color); }
-        .cat-bar { display: flex; gap: 8px; overflow-x: auto; padding: 5px 0 15px; }
-        .cat-chip { padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; white-space: nowrap; cursor: pointer; transition: 0.2s; font-weight: 600; opacity: 0.6; }
-        .cat-chip.active { opacity: 1; color: white !important; }
-
-        .input-group { display: flex; gap: 8px; margin-bottom: 20px; }
-        #todoInput { flex: 1; padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; outline: none; background: white; }
-        #addBtn { background: var(--point-blue); color: white; border: none; width: 45px; border-radius: 12px; font-size: 1.2rem; }
-
-        /* 드래그 가능한 투두 아이템 */
-        .todo-item { 
-            display: flex; align-items: center; gap: 10px; padding: 12px; background: white; 
-            border-radius: 12px; margin-bottom: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
-            cursor: grab; 
+        /* --- 전체 화면 업적 섹션 --- */
+        .full-todo-page {
+            position: fixed; top: 100%; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); z-index: 1000;
+            transition: top 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            display: flex; flex-direction: column;
         }
-        .todo-item:active { cursor: grabbing; }
-        .todo-item.dragging { opacity: 0.3; }
-        .todo-item.done { opacity: 0.5; text-decoration: line-through; }
-        .cat-title { font-size: 0.75rem; font-weight: 800; color: #94A3B8; margin: 15px 0 8px; display: flex; align-items: center; gap: 6px; }
+        .full-todo-page.active { top: 0; }
 
-        .action-sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; z-index: 500; backdrop-filter: blur(2px); }
-        .action-sheet { position: fixed; bottom: -100%; left: 0; right: 0; background: #F2F2F7; border-radius: 25px 25px 0 0; padding: 20px; transition: bottom 0.3s ease; z-index: 501; }
+        .todo-header {
+            background: white; padding: 50px 20px 20px; flex-shrink: 0;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .todo-header h3 { margin: 0; font-size: 1.3rem; }
+        .close-btn { font-size: 1.5rem; border: none; background: none; color: #94a3b8; cursor: pointer; }
+
+        .todo-content { flex: 1; overflow-y: auto; padding: 20px; }
+        
+        .cat-bar { display: flex; gap: 8px; overflow-x: auto; padding: 5px 0 20px; }
+        .cat-chip { padding: 10px 20px; border-radius: 25px; font-size: 0.9rem; white-space: nowrap; cursor: pointer; transition: 0.2s; font-weight: 600; opacity: 0.6; }
+        .cat-chip.active { opacity: 1; color: white !important; transform: scale(1.05); }
+
+        .input-group { display: flex; gap: 8px; margin-bottom: 25px; }
+        #todoInput { flex: 1; padding: 15px; border: 1px solid #e2e8f0; border-radius: 15px; outline: none; background: white; font-size: 1rem; }
+        #addBtn { background: var(--point-blue); color: white; border: none; width: 55px; border-radius: 15px; font-size: 1.5rem; cursor: pointer; }
+
+        .todo-item { 
+            display: flex; align-items: center; gap: 12px; padding: 18px; background: white; 
+            border-radius: 18px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); 
+            cursor: pointer; font-size: 1rem;
+        }
+        .todo-item.done { opacity: 0.5; text-decoration: line-through; }
+        .cat-title { font-size: 0.85rem; font-weight: 800; color: #94A3B8; margin: 20px 0 10px; display: flex; align-items: center; gap: 8px; }
+
+        /* 액션 시트 */
+        .action-sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; z-index: 2000; backdrop-filter: blur(2px); }
+        .action-sheet {
+            position: fixed; bottom: -100%; left: 0; right: 0; background: #F2F2F7;
+            border-radius: 25px 25px 0 0; padding: 20px; transition: bottom 0.3s ease; z-index: 2001;
+        }
         .action-sheet.active { bottom: 0; }
         .sheet-header { display: flex; gap: 10px; margin-bottom: 15px; }
-        .header-btn { flex: 1; background: white; border-radius: 15px; padding: 15px; border: none; font-weight: 600; font-size: 0.9rem; cursor: pointer; }
+        .header-btn { flex: 1; background: white; border-radius: 15px; padding: 15px; border: none; font-weight: 600; font-size: 0.9rem; }
         .action-list { background: white; border-radius: 15px; overflow: hidden; }
-        .action-item { padding: 15px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 0.5px solid #F0F0F0; font-weight: 500; cursor: pointer; }
+        .action-item { padding: 15px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 0.5px solid #F0F0F0; font-weight: 500; }
     </style>
 </head>
 <body>
 
-<div class="main-wrapper" id="mainWrapper">
-    <div class="page">
-        <header>
-            <button class="nav-btn" onclick="changeMonth(-1)">◀</button>
-            <h2 id="currentMonthYear"></h2>
-            <button class="nav-btn" onclick="changeMonth(1)">▶</button>
-        </header>
-        <section class="calendar-section">
-            <div class="calendar-grid">
-                <div class="day-label">S</div><div class="day-label">M</div><div class="day-label">T</div>
-                <div class="day-label">W</div><div class="day-label">T</div><div class="day-label">F</div><div class="day-label">S</div>
-            </div>
-            <div id="calendarDays" class="days-container"></div>
-        </section>
-        <section class="inline-todo-section">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h3 id="todoDateTitle">오늘의 업적</h3>
-                <span id="todoDateText" style="font-size:0.8rem; color:var(--point-blue); font-weight:600;"></span>
-            </div>
-            <div class="cat-bar" id="catBar"></div>
-            <div class="input-group">
-                <input type="text" id="todoInput" placeholder="업적 추가..." onkeypress="if(event.keyCode==13) addTodo()">
-                <button id="addBtn" onclick="addTodo()">+</button>
-            </div>
-            <div id="todoList"></div>
-        </section>
+<div class="page">
+    <header>
+        <button class="nav-btn" onclick="changeMonth(-1)">◀</button>
+        <h2 id="currentMonthYear"></h2>
+        <button class="nav-btn" onclick="changeMonth(1)">▶</button>
+    </header>
+    <section class="calendar-section">
+        <div class="calendar-grid">
+            <div class="day-label">S</div><div class="day-label">M</div><div class="day-label">T</div>
+            <div class="day-label">W</div><div class="day-label">T</div><div class="day-label">F</div><div class="day-label">S</div>
+        </div>
+        <div id="calendarDays" class="days-container"></div>
+    </section>
+    <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#cbd5e1; font-size:0.85rem; padding:20px; text-align:center;">
+        웃고 떠들며 <br> 바람을 가르자 ☁️
+    </div>
+</div>
+
+<div class="full-todo-page" id="fullTodoPage">
+    <div class="todo-header">
+        <h3 id="todoDateTitle">오늘의 업적</h3>
+        <button class="close-btn" onclick="closeTodoPage()">✕</button>
+    </div>
+    <div class="todo-content">
+        <div id="todoDateSubtitle" style="font-weight: 700; color: var(--point-blue); margin-bottom: 15px;"></div>
+        <div class="cat-bar" id="catBar"></div>
+        <div class="input-group">
+            <input type="text" id="todoInput" placeholder="업적 추가" onkeypress="if(event.keyCode==13) addTodo()">
+            <button id="addBtn" onclick="addTodo()">+</button>
+        </div>
+        <div id="todoList"></div>
     </div>
 </div>
 
@@ -131,7 +156,7 @@
     let selectedDateKey = "";
     let selectedCatIdx = 0;
     let actionTargetIdx = null;
-    let data = JSON.parse(localStorage.getItem('gs_final_pro_v3')) || { todos: {}, routines: [], exceptions: {} };
+    let data = JSON.parse(localStorage.getItem('gs_final_pro_v4')) || { todos: {}, routines: [], exceptions: {} };
 
     function renderCalendar() {
         const year = currentMonth.getFullYear(), month = currentMonth.getMonth();
@@ -165,12 +190,8 @@
             div.className = `day ${dateKey === selectedDateKey ? 'selected' : ''}`;
             div.style.backgroundColor = doneCount >= 3 ? 'var(--grass-2)' : doneCount >= 1 ? 'var(--grass-1)' : 'white';
             
-            // 드래그 앤 드롭 타겟 설정
-            div.ondragover = (e) => { e.preventDefault(); div.classList.add('drag-over'); };
-            div.ondragleave = () => { div.classList.remove('drag-over'); };
-            div.ondrop = (e) => {
-                e.preventDefault();
-                div.classList.remove('drag-over');
+            div.ondragover = e => e.preventDefault();
+            div.ondrop = e => {
                 const dropData = JSON.parse(e.dataTransfer.getData('todo'));
                 moveTodo(dropData.oldKey, dropData.idx, dateKey);
             };
@@ -190,9 +211,13 @@
 
     function selectDate(y, m, d) {
         selectedDateKey = `${y}-${m}-${d}`;
-        document.getElementById('todoDateText').innerText = `${m}월 ${d}일`;
+        document.getElementById('todoDateSubtitle').innerText = `할 수 있다능`;
+        openTodoPage();
         renderCalendar(); renderCatBar(); renderTodos();
     }
+
+    function openTodoPage() { document.getElementById('fullTodoPage').classList.add('active'); }
+    function closeTodoPage() { document.getElementById('fullTodoPage').classList.remove('active'); }
 
     function renderCatBar() {
         const bar = document.getElementById('catBar'); bar.innerHTML = '';
@@ -220,34 +245,14 @@
                 groups[cat.name].forEach(t => {
                     const item = document.createElement('div');
                     item.className = `todo-item ${t.done ? 'done' : ''}`;
-                    item.draggable = true; // 드래그 가능하게 설정
-                    
-                    // 드래그 소스 설정
-                    item.ondragstart = (e) => {
-                        item.classList.add('dragging');
-                        e.dataTransfer.setData('todo', JSON.stringify({oldKey: selectedDateKey, idx: t.idx}));
-                    };
-                    item.ondragend = () => { item.classList.remove('dragging'); };
-
-                    item.onclick = (e) => {
-                        if(e.target.type !== 'checkbox') openActionSheet(t.idx);
-                    };
-
-                    item.innerHTML = `<input type="checkbox" ${t.done?'checked':''} onclick="event.stopPropagation(); toggleTodo(${t.idx})"><span style="flex:1">${t.text} ${t.routineId?'':''}</span>`;
+                    item.draggable = true;
+                    item.ondragstart = e => e.dataTransfer.setData('todo', JSON.stringify({oldKey: selectedDateKey, idx: t.idx}));
+                    item.onclick = () => openActionSheet(t.idx);
+                    item.innerHTML = `<input type="checkbox" ${t.done?'checked':''} onclick="event.stopPropagation(); toggleTodo(${t.idx})"><span style="flex:1">${t.text} ${t.routineId?'(🔄)':''}</span>`;
                     list.appendChild(item);
                 });
             }
         });
-    }
-
-    function moveTodo(oldKey, idx, newKey) {
-        const todo = data.todos[oldKey].splice(idx, 1)[0];
-        if(!data.todos[newKey]) data.todos[newKey] = [];
-        data.todos[newKey].push(todo);
-        save();
-        // 이동 후 대상 날짜로 즉시 이동하여 결과 확인
-        const [y, m, d] = newKey.split('-').map(Number);
-        selectDate(y, m, d);
     }
 
     function getNumericDate(dateStr) {
@@ -289,7 +294,11 @@
         } else if(type === 'tomorrow') {
             const [y, m, d] = selectedDateKey.split('-').map(Number);
             const next = new Date(y, m-1, d+1);
-            moveTodo(selectedDateKey, actionTargetIdx, `${next.getFullYear()}-${next.getMonth()+1}-${next.getDate()}`);
+            const nextKey = `${next.getFullYear()}-${next.getMonth()+1}-${next.getDate()}`;
+            const todo = data.todos[selectedDateKey].splice(actionTargetIdx, 1)[0];
+            if(!data.todos[nextKey]) data.todos[nextKey] = [];
+            data.todos[nextKey].push(todo);
+            closeTodoPage();
         } else if(type === 'routine') {
             const dayOfWeek = new Date(selectedDateKey.replace(/-/g, '/')).getDay();
             const newRid = Date.now();
@@ -297,6 +306,13 @@
             currentTodo.routineId = newRid;
         }
         save(); closeActionSheet();
+    }
+
+    function moveTodo(oldKey, idx, newKey) {
+        const todo = data.todos[oldKey].splice(idx, 1)[0];
+        if(!data.todos[newKey]) data.todos[newKey] = [];
+        data.todos[newKey].push(todo);
+        save();
     }
 
     function openActionSheet(idx) { 
@@ -309,11 +325,10 @@
     function closeActionSheet() { document.getElementById('actionSheet').classList.remove('active'); document.getElementById('actionOverlay').style.display = 'none'; }
     function addTodo() { const val = document.getElementById('todoInput').value; if(!val) return; if(!data.todos[selectedDateKey]) data.todos[selectedDateKey] = []; data.todos[selectedDateKey].push({text: val, cat: CATEGORIES[selectedCatIdx].name, done: false}); document.getElementById('todoInput').value = ''; save(); }
     function toggleTodo(i) { data.todos[selectedDateKey][i].done = !data.todos[selectedDateKey][i].done; save(); }
-    function save() { localStorage.setItem('gs_final_pro_v3', JSON.stringify(data)); renderTodos(); renderCalendar(); }
+    function save() { localStorage.setItem('gs_final_pro_v4', JSON.stringify(data)); renderTodos(); renderCalendar(); }
     function changeMonth(o) { currentMonth.setMonth(currentMonth.getMonth()+o); renderCalendar(); }
 
-    const today = new Date();
-    selectDate(today.getFullYear(), today.getMonth()+1, today.getDate());
+    renderCalendar();
 </script>
 </body>
 </html>
